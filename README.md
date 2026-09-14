@@ -33,3 +33,28 @@ users, businesses, leads, jobs, customers, tasks, activities, ai_insights, autom
 
 ## Important
 LocalStorage authentication/data is not secure enough for a real SaaS. This V4 is the product/UI/data-flow prototype and production migration scaffold.
+
+
+# FlowAI V5 Premium
+
+V5 keeps the V4 functional prototype and gives it a substantially more premium visual system:
+- dark executive sidebar
+- refined SaaS typography and spacing
+- elevated cards and tables
+- premium AI Command Centre treatment
+- glass/sticky top navigation
+- polished forms, badges, buttons and responsive layouts
+- subtle interaction and hover motion
+- mobile-first responsive behaviour
+
+The underlying V4 prototype behaviour and localStorage persistence are retained.
+
+## Important
+This is still a browser prototype. For a real multi-user SaaS:
+1. Firebase Authentication for accounts
+2. Firestore for business data
+3. Firebase Cloud Functions/server for AI API calls
+4. Stripe for billing
+5. OAuth/integrations for Gmail, Outlook, Calendar and WhatsApp
+
+Never place a private AI API key in GitHub Pages/frontend JavaScript.

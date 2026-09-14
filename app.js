@@ -139,3 +139,22 @@ init();
    This prototype intentionally keeps a local adapter so it runs from a downloaded folder.
    For production, replace load/save/auth with Firebase Auth + Firestore and call AI from
    a Cloud Function/server endpoint so API secrets never reach the browser. */
+
+
+/* FlowAI V5 Premium UI layer */
+(function(){
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll('button').forEach(b => {
+      if (!b.dataset.premiumBound) {
+        b.dataset.premiumBound = '1';
+        b.addEventListener('mousedown',()=>b.style.transform='scale(.985)');
+        b.addEventListener('mouseup',()=>b.style.transform='');
+      }
+    });
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  // Add subtle premium browser chrome / accessibility defaults.
+  document.documentElement.style.scrollBehavior='smooth';
+  document.body.classList.add('flowai-premium');
+})();
