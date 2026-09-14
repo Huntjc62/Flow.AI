@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6d5dfc">
+<title>FlowAI — AI Business OS</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand" id="brand">
+      <div class="brand-mark" id="brandMark">F</div>
+      <div><strong id="brandName">FlowAI</strong><span>AI Business OS</span></div>
+    </div>
+    <button class="workspace-switch" id="workspaceBtn"><span class="workspace-dot"></span><span id="workspaceName">My workspace</span><span>⌄</span></button>
+    <nav>
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item active" data-page="overview"><span>⌂</span>Overview</button>
+      <button class="nav-item" data-page="leads"><span>◉</span>Leads <b id="navLeadCount">0</b></button>
+      <button class="nav-item" data-page="jobs"><span>▣</span>Jobs <b id="navJobCount">0</b></button>
+      <button class="nav-item" data-page="customers"><span>♧</span>Customers</button>
+      <button class="nav-item" data-page="calendar"><span>□</span>Calendar</button>
+      <button class="nav-item" data-page="ai"><span>✦</span>AI Command Centre</button>
+      <div class="nav-label">Manage</div>
+      <button class="nav-item" data-page="reports"><span>◫</span>Reports</button>
+      <button class="nav-item" data-page="settings"><span>⚙</span>Settings</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="ai-mini"><span>✦</span><div><strong>AI is watching</strong><small id="watchText">Your business for opportunities</small></div></div>
+      <button class="logout" id="logoutBtn">↪ Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu">☰</button>
+      <div class="search"><span>⌕</span><input id="search" placeholder="Search anything…"><kbd>Ctrl K</kbd></div>
+      <div class="top-actions">
+        <button class="round-btn" id="aiBtn" title="AI Command Centre">✦</button>
+        <button class="round-btn" id="bellBtn" title="Notifications">♧<i id="bellDot"></i></button>
+        <button class="user-pill" id="profileBtn"><span id="userAvatar">U</span><span id="userName">Owner</span><b>⌄</b></button>
+      </div>
+    </header>
+    <section class="content" id="content"></section>
+  </main>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
