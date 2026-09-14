@@ -158,3 +158,174 @@ init();
   document.documentElement.style.scrollBehavior='smooth';
   document.body.classList.add('flowai-premium');
 })();
+
+/* =========================================================
+   FLOWAI V6 — RECORD DETAIL ROUTER
+   ========================================================= */
+(function(){
+  const key = 'flowai_v4_data';
+  const state = {
+    get(){
+      try { return JSON.parse(localStorage.getItem(key)) || {}; } catch(e){ return {}; }
+    },
+    save(v){ localStorage.setItem(key, JSON.stringify(v)); }
+  };
+
+  function esc(v){
+    return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+  function initials(name){
+    const a=String(name||'').trim().split(/\s+/).filter(Boolean);
+    return (a[0]?.[0]||'?')+(a[1]?.[0]||'');
+  }
+  function getRecord(type,id){
+    const d=state.get();
+    const arr=d[type] || [];
+    return arr.find(x=>String(x.id)===String(id));
+  }
+  function goBack(){
+    if(typeof window.render==='function') window.render();
+    else location.hash='';
+  }
+  function recordShell(title, subtitle, avatar, content, side=''){
+    return `<div class="record-page">
+      <div class="record-top">
+        <div class="record-breadcrumbs"><button id="recordBack">← Back</button><span>/</span><span>${esc(subtitle)}</span></div>
+        <div class="record-title-row">
+          <div class="record-identity">
+            <div class="record-avatar">${esc(avatar)}</div>
+            <div><div class="record-eyebrow">${esc(subtitle)}</div><div class="record-name">${esc(title)}</div><div class="record-meta">FlowAI record · Private workspace view</div></div>
+          </div>
+          <div class="record-actions">
+            <button class="crm-btn" id="recordClose">Close</button>
+            <button class="crm-btn primary" id="recordEdit">Edit record</button>
+          </div>
+        </div>
+        <div class="record-tabs"><button class="record-tab active">Overview</button><button class="record-tab">Activity</button><button class="record-tab">Notes</button><button class="record-tab">Files</button></div>
+      </div>
+      <div class="record-layout"><main class="record-main">${content}</main><aside class="record-side">${side}</aside></div>
+    </div>`;
+  }
+
+  function card(title,body,action=''){
+    return `<section class="record-card"><div class="record-card-head"><div class="record-card-title">${esc(title)}</div>${action?`<button class="record-card-action">${esc(action)}</button>`:''}</div><div class="record-card-body">${body}</div></section>`;
+  }
+
+  function field(label,value){
+    return `<div class="detail-item"><label>${esc(label)}</label><div>${esc(value||'—')}</div></div>`;
+  }
+
+  function leadDetail(id){
+    const r=getRecord('leads',id);
+    if(!r){goBack();return;}
+    const full=[r.firstName,r.lastName].filter(Boolean).join(' ')||'Unnamed lead';
+    const d=state.get();
+    const jobs=(d.jobs||[]).filter(j=>String(j.leadId||'')===String(id));
+    const content =
+      `<section class="record-card"><div class="metric-strip">
+        <div class="metric"><label>Status</label><strong>${esc(r.status||'New')}</strong><span>Current stage</span></div>
+        <div class="metric"><label>Value</label><strong>${esc(r.value?`£${Number(r.value).toLocaleString()}`:'—')}</strong><span>Estimated opportunity</span></div>
+        <div class="metric"><label>Source</label><strong>${esc(r.source||'Direct')}</strong><span>Acquisition</span></div>
+        <div class="metric"><label>Created</label><strong>${esc(r.created||'—')}</strong><span>Record date</span></div>
+      </div></section>`+
+      card('Contact information',`<div class="detail-grid">${field('First name',r.firstName)}${field('Last name',r.lastName)}${field('Email',r.email)}${field('Phone',r.phone)}${field('Service',r.service)}${field('Office / owner',r.office||'Primary team')}</div>`)+
+      card('Opportunity details',`<div class="detail-grid">${field('Status',r.status)}${field('Lead source',r.source)}${field('Estimated value',r.value?`£${Number(r.value).toLocaleString()}`:'—')}${field('Next action',r.nextAction||'Follow up with lead')}</div>`)+
+      card('Activity timeline',`<div class="timeline">
+        <div class="timeline-item"><div class="timeline-dot">●</div><div><div class="timeline-title">Lead created</div><div class="timeline-text">FlowAI added this enquiry to your pipeline.</div><div class="timeline-time">${esc(r.created||'Recently')}</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot">AI</div><div><div class="timeline-title">AI priority available</div><div class="timeline-text">Review this record to see suggested next actions.</div><div class="timeline-time">FlowAI</div></div></div>
+      </div>`)+
+      (jobs.length?card('Related jobs',jobs.map(j=>`<div class="list-row"><div class="list-primary"><div class="list-name">${esc(j.title||j.name||'Job')}</div><div class="list-secondary">${esc(j.status||'Scheduled')}</div></div><div class="list-actions"><span class="badge">${esc(j.status||'Open')}</span></div></div>`).join(''):'');
+    const side=card('Record owner',`<div class="side-section-title">Assigned to</div><div class="side-field"><strong>${esc(r.owner||r.office||'Your team')}</strong></div>
+      <div class="side-section-title" style="margin-top:18px">AI insight</div><div class="side-field"><strong>Next best action</strong><div style="font-size:10px;color:#858a99;margin-top:4px">Review the lead and follow up based on its current status.</div></div>`);
+    document.querySelector('.content').innerHTML=recordShell(full,'Lead',initials(full),content,side);
+    bindRecordEdit('leads',id,r,full);
+  }
+
+  function jobDetail(id){
+    const r=getRecord('jobs',id);
+    if(!r){goBack();return;}
+    const title=r.title||r.name||'Untitled job';
+    const d=state.get();
+    const customer=(d.customers||[]).find(c=>String(c.id)===String(r.customerId));
+    const content=
+      `<section class="record-card"><div class="metric-strip">
+        <div class="metric"><label>Status</label><strong>${esc(r.status||'Open')}</strong><span>Job stage</span></div>
+        <div class="metric"><label>Value</label><strong>${esc(r.value?`£${Number(r.value).toLocaleString()}`:'—')}</strong><span>Job value</span></div>
+        <div class="metric"><label>Due</label><strong>${esc(r.dueDate||r.date||'—')}</strong><span>Scheduled date</span></div>
+        <div class="metric"><label>Health</label><strong>${esc(r.health?`${r.health}%`:'Good')}</strong><span>AI job health</span></div>
+      </div></section>`+
+      card('Job details',`<div class="detail-grid">${field('Job name',title)}${field('Status',r.status)}${field('Due date',r.dueDate||r.date)}${field('Assigned to',r.assignee||r.owner)}${field('Customer',customer?[customer.firstName,customer.lastName].filter(Boolean).join(' '):r.customer||'—')}${field('Value',r.value?`£${Number(r.value).toLocaleString()}`:'—')}</div>`)+
+      card('Customer',customer?`<div class="detail-grid">${field('Name',[customer.firstName,customer.lastName].filter(Boolean).join(' '))}${field('Email',customer.email)}${field('Phone',customer.phone)}${field('Customer value',customer.value?`£${Number(customer.value).toLocaleString()}`:'—')}</div>`:`<div class="record-empty">No linked customer is attached to this job.</div>`)+
+      card('Job activity',`<div class="timeline"><div class="timeline-item"><div class="timeline-dot">✓</div><div><div class="timeline-title">Job created</div><div class="timeline-text">This job is now being monitored by FlowAI.</div></div></div><div class="timeline-item"><div class="timeline-dot">AI</div><div><div class="timeline-title">AI monitoring active</div><div class="timeline-text">FlowAI can flag risk, delays and missing actions.</div></div></div></div>`);
+    const side=card('Job health',`<div class="side-field"><label>Current health</label><strong>${esc(r.health?`${r.health}%`:'Good')}</strong></div><div class="side-field"><label>Risk</label><strong>${esc(r.risk||'No major risk detected')}</strong></div><div class="side-field"><label>Next action</label><strong>${esc(r.nextAction||'Keep job status up to date')}</strong></div>`);
+    document.querySelector('.content').innerHTML=recordShell(title,'Job',initials(title),content,side);
+    bindRecordEdit('jobs',id,r,title);
+  }
+
+  function customerDetail(id){
+    const r=getRecord('customers',id);
+    if(!r){goBack();return;}
+    const full=[r.firstName,r.lastName].filter(Boolean).join(' ')||r.name||'Unnamed customer';
+    const d=state.get();
+    const jobs=(d.jobs||[]).filter(j=>String(j.customerId||'')===String(id));
+    const content=
+      `<section class="record-card"><div class="metric-strip">
+        <div class="metric"><label>Customer value</label><strong>${esc(r.value?`£${Number(r.value).toLocaleString()}`:'—')}</strong><span>Total value</span></div>
+        <div class="metric"><label>Status</label><strong>${esc(r.status||'Active')}</strong><span>Relationship</span></div>
+        <div class="metric"><label>Jobs</label><strong>${jobs.length}</strong><span>Linked records</span></div>
+        <div class="metric"><label>Last contact</label><strong>${esc(r.lastContact||'—')}</strong><span>Recent activity</span></div>
+      </div></section>`+
+      card('Customer information',`<div class="detail-grid">${field('First name',r.firstName)}${field('Last name',r.lastName)}${field('Email',r.email)}${field('Phone',r.phone)}${field('Status',r.status)}${field('Customer value',r.value?`£${Number(r.value).toLocaleString()}`:'—')}</div>`)+
+      card('Jobs & history',jobs.length?jobs.map(j=>`<div class="list-row"><div class="list-primary"><div class="list-name">${esc(j.title||j.name||'Job')}</div><div class="list-secondary">${esc(j.dueDate||j.date||'')} · ${esc(j.status||'Open')}</div></div><span class="badge">${esc(j.value?`£${Number(j.value).toLocaleString()}`:'Job')}</span></div>`).join(''):'<div class="record-empty">No jobs are linked to this customer yet.</div>')+
+      card('Customer activity',`<div class="timeline"><div class="timeline-item"><div class="timeline-dot">●</div><div><div class="timeline-title">Customer profile opened</div><div class="timeline-text">You are viewing a private, single-record workspace.</div></div></div><div class="timeline-item"><div class="timeline-dot">AI</div><div><div class="timeline-title">Customer memory</div><div class="timeline-text">Future AI actions can use this customer's history without cluttering the main pipeline.</div></div></div></div>`);
+    const side=card('Relationship',`<div class="side-field"><label>Status</label><strong>${esc(r.status||'Active')}</strong></div><div class="side-field"><label>Email</label><strong>${esc(r.email||'—')}</strong></div><div class="side-field"><label>Phone</label><strong>${esc(r.phone||'—')}</strong></div>`);
+    document.querySelector('.content').innerHTML=recordShell(full,'Customer',initials(full),content,side);
+    bindRecordEdit('customers',id,r,full);
+  }
+
+  function bindRecordEdit(type,id,r,title){
+    document.getElementById('recordBack')?.addEventListener('click',goBack);
+    document.getElementById('recordClose')?.addEventListener('click',goBack);
+    document.getElementById('recordEdit')?.addEventListener('click',()=>editRecord(type,id,r,title));
+  }
+
+  function editRecord(type,id,r,title){
+    const editable=['firstName','lastName','name','email','phone','status','service','source','value','dueDate','date','assignee','owner','notes'];
+    const body=`<div class="record-edit"><div class="form-grid">${
+      editable.filter(k=>r[k]!==undefined || ['firstName','lastName','name','email','phone','status','notes'].includes(k)).map(k=>{
+        const v=r[k]??'';
+        const area=k==='notes';
+        return `<div class="field ${area?'full':''}"><label>${esc(k.replace(/([A-Z])/g,' $1'))}</label>${area?`<textarea data-edit="${k}">${esc(v)}</textarea>`:`<input data-edit="${k}" value="${esc(v)}">`}</div>`;
+      }).join('')
+    }</div></div>`;
+    document.querySelector('.content').innerHTML=`<div class="record-page"><div class="record-top"><div class="record-breadcrumbs"><button id="recordCancel">← Back to record</button></div><div class="record-title-row"><div><div class="record-eyebrow">Edit ${esc(type.slice(0,-1))}</div><div class="record-name">${esc(title)}</div><div class="record-meta">Changes apply only to this record.</div></div></div></div><div class="record-layout"><main class="record-main">${card('Edit details',body)}</main></div><div class="record-footer"><button class="crm-btn" id="recordCancel2">Cancel</button><button class="crm-btn primary" id="recordSave">Save changes</button></div></div>`;
+    document.getElementById('recordCancel')?.addEventListener('click',()=>openRecord(type,id));
+    document.getElementById('recordCancel2')?.addEventListener('click',()=>openRecord(type,id));
+    document.getElementById('recordSave')?.addEventListener('click',()=>{
+      const d=state.get(); const arr=d[type]||[]; const item=arr.find(x=>String(x.id)===String(id));
+      if(!item)return;
+      document.querySelectorAll('[data-edit]').forEach(el=>item[el.dataset.edit]=el.value);
+      state.save(d); openRecord(type,id);
+    });
+  }
+
+  function openRecord(type,id){
+    if(type==='leads') leadDetail(id);
+    else if(type==='jobs') jobDetail(id);
+    else if(type==='customers') customerDetail(id);
+    else goBack();
+  }
+
+  // Global helper: existing V4 list rows can call window.openFlowAIRecord(type,id).
+  window.openFlowAIRecord=openRecord;
+
+  // Hash support: #lead/123, #job/123, #customer/123
+  function route(){
+    const h=location.hash.replace(/^#/,'');
+    const m=h.match(/^(lead|job|customer)\/(.+)$/);
+    if(!m)return;
+    openRecord({lead:'leads',job:'jobs',customer:'customers'}[m[1]],decodeURIComponent(m[2]));
+  }
+  window.addEventListener('hashchange',route);
+  setTimeout(route,250);
+})();

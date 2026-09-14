@@ -58,3 +58,18 @@ This is still a browser prototype. For a real multi-user SaaS:
 5. OAuth/integrations for Gmail, Outlook, Calendar and WhatsApp
 
 Never place a private AI API key in GitHub Pages/frontend JavaScript.
+
+
+# V6 Enterprise Record UX
+
+V6 adds a dedicated record experience inspired by modern enterprise CRMs:
+- Every lead, job and customer can have a focused single-record page.
+- The record page hides the rest of the CRM while you work on that record.
+- Dedicated Overview, Activity, Notes and Files tabs are presented.
+- Detailed contact/job/customer information is shown in sections.
+- Inline record editing has its own save/cancel workflow.
+- AI insight and health panels are surfaced alongside the record.
+- URL/hash routes support `#lead/<id>`, `#job/<id>` and `#customer/<id>`.
+- Existing V4 localStorage functionality is retained.
+
+For existing V4 list markup, add `data-record-type="lead|job|customer"` and `data-record-id="<id>"` to make a row/card open the dedicated record view.

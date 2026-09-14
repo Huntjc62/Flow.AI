@@ -51,5 +51,15 @@
 <div class="toast-wrap" id="toasts"></div>
 
 <script type="module" src="app.js"></script>
+
+<script>
+/* V6 record navigation helper. Existing V4 views can opt in with data-record-type/id. */
+document.addEventListener('click', function(e){
+  const el=e.target.closest('[data-record-type][data-record-id]');
+  if(!el)return;
+  e.preventDefault();
+  window.location.hash = el.dataset.recordType + '/' + encodeURIComponent(el.dataset.recordId);
+});
+</script>
 </body>
 </html>
